@@ -25,7 +25,27 @@ f(N): 0, 1, 3, 4, 6, 7, 9, 11, 13, 16, 18, 21, 24, 27, 30, 33, 36, 39, 42, 46, 5
 const N = 33 #get(args, :number, 20)
 
 
+#looks bugged to me, the indexes in the for loop do not make sense
+# function find_all_four_cycles(adjmat::Matrix{Int})
+#     N = size(adjmat, 1)
+#     four_cycles = Vector{Tuple{Int8, Int8, Int8, Int8}}()
 
+#     # Loop over all quadruples (a, b, c, d) where a < b < c < d
+#     for a in 1:N
+#         for b in a+1:N
+#             for c in a+1:N
+#                 for d in b+1:N
+#                     if adjmat[a, b] == 1 && adjmat[b, c] == 1 && adjmat[c, d] == 1 && adjmat[d, a] == 1
+#                         push!(four_cycles, (a, b, c, d))
+#                     end
+#                 end
+#             end
+#         end
+#     end
+
+#     return four_cycles
+# end
+#fixed version
 function find_all_four_cycles(adjmat::Matrix{Int})
     N = size(adjmat, 1)
     four_cycles = Vector{Tuple{Int8, Int8, Int8, Int8}}()
@@ -33,8 +53,8 @@ function find_all_four_cycles(adjmat::Matrix{Int})
     # Loop over all quadruples (a, b, c, d) where a < b < c < d
     for a in 1:N
         for b in a+1:N
-            for c in a+1:N
-                for d in b+1:N
+            for c in b+1:N  # Fix: c should start at b+1, not a+1
+                for d in c+1:N  # Fix: d should start at c+1, not b+1
                     if adjmat[a, b] == 1 && adjmat[b, c] == 1 && adjmat[c, d] == 1 && adjmat[d, a] == 1
                         push!(four_cycles, (a, b, c, d))
                     end
@@ -82,6 +102,7 @@ function greedy_search_from_startpoint(db, obj::OBJ_TYPE, additional_loops=0)::V
     Greedily remove edges to destroy all triangles, then greedily add edges without creating triangles
     Returns final maximal triangle-free graph
     """
+    # println("greedy_search_from_startpoint()")
     num_commas = count(c -> c == ',', obj)
     if num_commas != N - 1
         return greedy_search_from_startpoint(db, empty_starting_point())

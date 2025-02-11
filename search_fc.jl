@@ -1,4 +1,3 @@
-using Base.Threads
 using Random
 using LinearAlgebra
 using Statistics
@@ -11,20 +10,23 @@ using Dates
 
 # Choose the problem to work on here!
 
-#include("problem_triangle_free.jl")  
-include("problem_4_cycle_free.jl")
+include("problem_triangle_free.jl")  
+# include("problem_4_cycle_free.jl")
 #include("problem_permanent_avoid_123.jl")
+ 
+# Define DEBUG_MODE
+const DEBUG_MODE = false
 
-
+# Helper function to print debug info
+function debug_print(msg)
+    if DEBUG_MODE
+        println("DEBUG: ", msg)
+    end
+end
 #########################################################################################
 
 include("constants.jl")
 
-if Threads.nthreads() > 1 
-    BLAS.set_num_threads(1)   # this seems to help a bit
-end
-
-println("Using ", nthreads(), " thread(s)")
 
 function find_next_available_filename(base::String, extension::String)
     i = 1
@@ -173,6 +175,7 @@ function reward(obj)
 end
 
 function reward(db, obj)
+    obj = string(obj)
     if haskey(db.objects, obj)
         return db.objects[obj], false
     end
@@ -180,16 +183,24 @@ function reward(db, obj)
 end
 
 function local_search_on_object(db, obj)
-    objects = Vector{OBJ_TYPE}(undef, 0)
+    # debug_print("local_search_on_object() called" * ", obj=$obj and typeof(obj)=$(typeof(obj))")
+    num_commas = count(c -> c == ',', obj)
+    # debug_print("n of commas ="*string(num_commas))
+    objects = Vector{OBJ_TYPE}(undef, 0) 
     rewards = Vector{REWARD_TYPE}(undef, 0) 
-    greedily_expanded_objs = greedy_search_from_startpoint(db, obj)
+    # greedily_expanded_objs = greedy_search_from_startpoint(db, obj)
+    greedily_expanded_objs = [greedy_search_from_startpoint(db,obj) for _ in 1:3]
     for greedily_expanded_obj in greedily_expanded_objs      
+        greedily_expanded_obj = string(greedily_expanded_obj)
         rew, new = reward(db, greedily_expanded_obj)
         if new
+            # debug_print("new object found, typeof(objects)=$(typeof(objects)) and typeof(greedily_expanded_obj)=$(typeof(greedily_expanded_obj))")
             push!(objects, greedily_expanded_obj)
             push!(rewards, rew)
         end
     end
+    # debug_print("local_search_on_object() returning")
+
     return objects, rewards
 end
 
@@ -212,26 +223,15 @@ end
 
 
 function local_search!(db, lines, start_ind, nb=nb_local_searches)
-    local_search_results_threads = []
-    for j=1:nthreads()
-        push!(local_search_results_threads, [[],[]])
-    end
-    # prepare local search pool
-    count = 0
+    local_search_results = [[],[]]
     pool = OBJ_TYPE[]
     append!(pool, lines[start_ind:min(start_ind + nb - 1,length(lines))])
-    # we perform the local searches
-    @threads for obj in pool
+    for obj in pool
         list_obj, list_rew = local_search_on_object(db, obj)
-        append!(local_search_results_threads[threadid()][1], list_obj)
-        append!(local_search_results_threads[threadid()][2], list_rew)
+        append!(local_search_results[1], list_obj)
+        append!(local_search_results[2], list_rew)
     end
-    # we update the dictionaries
-    for j=1:nthreads()
-        # we consider all new graphs found by j-th thread
-        # Remark: a tiny number of graphs could be found by multiple threads, this is not a problem, the function add! will add each graph only once
-        add_db!(db, local_search_results_threads[j][1], local_search_results_threads[j][2])
-    end
+    add_db!(db, local_search_results[1], local_search_results[2])
     return nothing
 end
 
@@ -254,7 +254,6 @@ function add_db!(db, list_obj, list_rew = nothing)
             if !haskey(db.objects, obj)       
                 rew = list_rew[i]         
                 push!(rewards_new_objects, rew)
-                #db.objects[obj] = rew
                 set!(db.objects, obj, rew)
                 if !haskey(db.rewards, rew)
                     insert!(db.rewards,rew,[obj])
@@ -265,22 +264,11 @@ function add_db!(db, list_obj, list_rew = nothing)
             end
         end
     else 
-        # compute rewards using multithreading if rewards are not provided
-        # first we identify the new objects
-        list_indices = Int[]
-        for i in 1:length(list_obj)
-            obj = list_obj[i]
-            if !haskey(db.objects, obj)
-                push!(list_indices, i)
-            end
-        end
-        # next we compute the rewards using multithreading
         list_rew = zeros(Float32, length(list_obj))
-        @threads for i in list_indices
+        for i in 1:length(list_obj)
             list_rew[i] = reward(list_obj[i])
         end
-        # finally we update the db 
-        for i in list_indices
+        for i in 1:length(list_obj)
             obj = list_obj[i]          
             rew = list_rew[i] 
             push!(rewards_new_objects, list_rew[i])
@@ -334,9 +322,6 @@ function main()
     lines = initial_lines()
     println(length(lines))
     println(length(Set(lines)))
-    print("Using ")
-    print(nthreads())
-    println(" threads")
     #add_db!(db, lines)
     start_idx = 1
     steps::Int = 0
@@ -352,14 +337,21 @@ function main()
     print_db(db)
     write_output_to_file(db)
     write_plot_to_file(db)
+    debug_print("End of search_fc.jl script")
 end
 
 
-write_path = ARGS[1]
-nb_local_searches = parse(Int,ARGS[2]) 
-num_initial_empty_objects = parse(Int,ARGS[3])
-final_database_size = parse(Int,ARGS[4])
-target_db_size = parse(Int,ARGS[5])
+# write_path = ARGS[1]
+# nb_local_searches = parse(Int,ARGS[2]) 
+# num_initial_empty_objects = parse(Int,ARGS[3])
+# final_database_size = parse(Int,ARGS[4])
+# target_db_size = parse(Int,ARGS[5])
+
+write_path = length(ARGS) >= 1 ? ARGS[1] : "checkpoint"
+nb_local_searches = length(ARGS) >= 2 ? parse(Int, ARGS[2]) : 120
+num_initial_empty_objects = length(ARGS) >= 3 ? parse(Int, ARGS[3]) : 5000
+final_database_size = length(ARGS) >= 4 ? parse(Int, ARGS[4]) : 500
+target_db_size = length(ARGS) >= 5 ? parse(Int, ARGS[5]) : 5000
 main()
 
 

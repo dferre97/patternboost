@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+*.o
+*.so
+*.dylib
+
+# Julia REPL history
+.julia_history
+
+# Julia compiled cache
+.julia
+
+# Logs and databases
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Dependency directories
+deps/

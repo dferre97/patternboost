@@ -26,18 +26,27 @@ def get_parser():
     parser = argparse.ArgumentParser('Generate training sample of low braids via reservoir sampling')
     # JULIA params
     
+    # parser.add_argument('--num_initial_empty_objects', type=int, default=5000, help='number of initial rollouts, before the first learning loop')
+    # parser.add_argument('--final_database_size', type=int, default=500, help='training set size')
+    # parser.add_argument('--target_db_size', type=int, default=500, help='size of cache during local search loop, should be larger than training set size')
+    # parser.add_argument('--sample-only', type=int, default=5000, help="sample the specified number from the model in each loop")
+    # parser.add_argument('--nb_threads', type=int, default=1, help='Number of cpu threads')
+    # parser.add_argument('--nb_local_searches', type=int, default=120, help='This only matters when using multithreading, then it should be a multiple of the number of threads used')
     parser.add_argument('--num_initial_empty_objects', type=int, default=500000, help='number of initial rollouts, before the first learning loop')
     parser.add_argument('--final_database_size', type=int, default=50000, help='training set size')
     parser.add_argument('--target_db_size', type=int, default=500000, help='size of cache during local search loop, should be larger than training set size')
-    parser.add_argument('--sample-only', type=int, default=500000, help="sample the specified number from the model in each loop")
+    parser.add_argument('--sample-only', type=int, default=100, help="sample the specified number from the model in each loop")
+    # parser.add_argument('--sample-only', type=int, default=500000, help="sample the specified number from the model in each loop")
     parser.add_argument('--nb_threads', type=int, default=1, help='Number of cpu threads')
     parser.add_argument('--nb_local_searches', type=int, default=1200, help='This only matters when using multithreading, then it should be a multiple of the number of threads used')
     
 
     # Makemore params
     parser.add_argument('--num-workers', '-n', type=int, default=8, help="number of data workers for both train/test")
-    parser.add_argument('--max-steps', type=int, default=20000, help="max number of optimization steps to run for, or -1 for infinite.")
-    parser.add_argument('--max_epochs', type=int, default= 30000, help='number of epochs')
+    parser.add_argument('--max-steps', type=int, default=100, help="max number of optimization steps to run for, or -1 for infinite.")
+    # parser.add_argument('--max-steps', type=int, default=20000, help="max number of optimization steps to run for, or -1 for infinite.")
+    parser.add_argument('--max_epochs', type=int, default= 5, help='number of epochs')
+    # parser.add_argument('--max_epochs', type=int, default= 30000, help='number of epochs')
     parser.add_argument('--seed', type=int, default=-1, help="seed")
     # sampling
     parser.add_argument('--top-k', type=int, default=-1, help="top-k for sampling, -1 means no top-k")
@@ -207,10 +216,13 @@ def create_datasets(input_file):
 
 def write_samples(num=10, new_file=False, use_logger=False):
     """ samples from the model and pretty prints the decoded samples """
+    logger.info("write_samples function called") 
     X_init = torch.zeros(num, 1, dtype=torch.long).to(args.device)
     top_k = args.top_k if args.top_k != -1 else None
     steps = train_dataset.get_output_length() - 1 # -1 because we already start with <START> token (index 0)
+    model.eval()
     X_samp = generate(model, X_init, steps, temperature = args.temperature, top_k=top_k, do_sample=True).to('cpu')
+    model.train()
     #logger.info(f"generated")
     n_samp =0
     max_samp=0
@@ -230,11 +242,11 @@ def write_samples(num=10, new_file=False, use_logger=False):
         sum_samp += len(s)
         max_samp = max(max_samp, len(s))
     out_file = args.dump_path + "/out.txt"
-    #if use_logger:
-        #logger.info("decoded")
-        # logger.info(f"Printing {len(samples)} samples to {out_file}.")
-    #else: 
-        # print(f"Printing {len(samples)} samples to {out_file}.")
+    if use_logger:
+        logger.info("decoded")
+        logger.info(f"Printing {len(samples)} samples to {out_file}.")
+    else: 
+        print(f"Printing {len(samples)} samples to {out_file}.")
     if not new_file:
         with open(out_file, "a") as file:
             for word in samples:
@@ -252,6 +264,10 @@ def write_samples(num=10, new_file=False, use_logger=False):
 if __name__ == '__main__':
     parser = get_parser()
     args = parser.parse_args()
+    print("PRINT ARGS")
+    print(args)
+    print("END PRINT ARGS")
+
     init_distributed_mode(args)
     logger = initialize_exp(args)
     if not os.path.exists(args.dump_path):
@@ -386,7 +402,8 @@ if __name__ == '__main__':
         logger.info(f"Memory allocated:  {torch.cuda.memory_allocated(0)/(1024*1024):.2f}MB, reserved: {torch.cuda.memory_reserved(0)/(1024*1024):.2f}MB")
 
         logger.info('generating')
-        sample_batch_size =args.gen_batch_size # reduce this if GPU crashes, increase it if sampling is slow
+        # sample_batch_size =args.gen_batch_size # reduce this if GPU crashes, increase it if sampling is slow
+        sample_batch_size =args.sample_only # reduce this if GPU crashes, increase it if sampling is slow
         todo = args.sample_only
         tot_n = 0
         tot_sum = 0
@@ -435,5 +452,4 @@ if __name__ == '__main__':
         tokenize(f"{args.dump_path}/search_output_{generation+1}.txt", args.n_tokens)
         input_file = args.dump_path + f"/search_output_{generation+1}-tokenized.txt"
         train_dataset, test_dataset = create_datasets(input_file)
-        
 

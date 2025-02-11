@@ -1,0 +1,385 @@
+root@592c864959d7:~/projects/transformers_math_experiments# python fc_loop.py 
+PRINT ARGS
+Namespace(num_initial_empty_objects=500000, final_database_size=50000, target_db_size=500000, sample_only=100, nb_threads=1, nb_local_searches=1200, num_workers=8, max_steps=100, max_epochs=5, seed=-1, top_k=-1, type='transformer', n_layer=4, n_head=8, n_embd=64, n_embd2=32, batch_size=32, learning_rate=0.0005, weight_decay=0.01, max_output_length=160, gen_batch_size=1000, n_tokens=100, temperature=1.0, dump_path='checkpoint', exp_name='debug', exp_id='', local_rank=-1, master_port=-1, cpu=False, debug_slurm=False, debug=False)
+END PRINT ARGS
+SLURM job: False
+0 - Number of nodes: 1
+0 - Node ID        : 0
+0 - Local rank     : 0
+0 - Global rank    : 0
+0 - World size     : 1
+0 - GPUs per node  : 1
+0 - Master         : True
+0 - Multi-node     : False
+0 - Multi-GPU      : False
+0 - Hostname       : 592c864959d7
+INFO - 02/06/25 16:10:16 - 0:00:00 - ============ Initialized logger ============
+INFO - 02/06/25 16:10:16 - 0:00:00 - batch_size: 32
+                                     command: python fc_loop.py --exp_id "v91psbl3zv"
+                                     cpu: False
+                                     debug: False
+                                     debug_slurm: False
+                                     dump_path: checkpoint/debug/v91psbl3zv
+                                     exp_id: v91psbl3zv
+                                     exp_name: debug
+                                     final_database_size: 50000
+                                     gen_batch_size: 1000
+                                     global_rank: 0
+                                     is_master: True
+                                     is_slurm_job: False
+                                     learning_rate: 0.0005
+                                     local_rank: 0
+                                     master_port: -1
+                                     max_epochs: 5
+                                     max_output_length: 160
+                                     max_steps: 100
+                                     multi_gpu: False
+                                     multi_node: False
+                                     n_embd: 64
+                                     n_embd2: 32
+                                     n_gpu_per_node: 1
+                                     n_head: 8
+                                     n_layer: 4
+                                     n_nodes: 1
+                                     n_tokens: 100
+                                     nb_local_searches: 1200
+                                     nb_threads: 1
+                                     node_id: 0
+                                     num_initial_empty_objects: 500000
+                                     num_workers: 8
+                                     sample_only: 100
+                                     seed: -1
+                                     target_db_size: 500000
+                                     temperature: 1.0
+                                     top_k: -1
+                                     type: transformer
+                                     weight_decay: 0.01
+                                     world_size: 1
+INFO - 02/06/25 16:10:16 - 0:00:00 - The experiment will be stored in checkpoint/debug/v91psbl3zv
+                                     
+INFO - 02/06/25 16:10:16 - 0:00:00 - Running command: python fc_loop.py
+
+INFO - 02/06/25 16:10:16 - 0:00:00 - seed: 662723232
+INFO - 02/06/25 16:10:16 - 0:00:00 - JULIA_NUM_THREADS is set to 1
+Input file: 
+No input file provided
+500000
+1
+Data written to checkpoint/debug/v91psbl3zv/search_output_1.txt
+An example of an object with maximum reward (25.0):
+010100111101001111011000100111110000111111000
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_1.png
+Score distribution saved to checkpoint/debug/v91psbl3zv/distribution.txt
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_training_1.png
+Filtered score distribution saved to checkpoint/debug/v91psbl3zv/training_distribution.txt
+DEBUG: End of search_fc.jl script
+INFO - 02/06/25 16:10:45 - 0:00:28 - Created checkpoint/debug/v91psbl3zv/temp.txt and training tokenizer...
+INFO - 02/06/25 16:10:45 - 0:00:28 - Directory 'checkpoint/debug/v91psbl3zv/tokenizer_data' created.
+[00:00:00] Pre-processing files (0 Mo)    ████████████████████████████████████████████████████                100%
+[00:00:00] Tokenize words                 ████████████████████████████████████████████████████ 5000     /     5000
+[00:00:00] Count pairs                    ████████████████████████████████████████████████████ 5000     /     5000
+[00:00:00] Compute merges                 ████████████████████████████████████████████████████ 98       /       98
+INFO - 02/06/25 16:10:46 - 0:00:30 - File 'checkpoint/debug/v91psbl3zv/temp.txt' has been deleted.
+Tokenizing training set...
+INFO - 02/06/25 16:10:46 - 0:00:30 - 0 / 50000
+INFO - 02/06/25 16:10:46 - 0:00:30 - 10000 / 50000
+INFO - 02/06/25 16:10:46 - 0:00:30 - 20000 / 50000
+INFO - 02/06/25 16:10:46 - 0:00:30 - 30000 / 50000
+INFO - 02/06/25 16:10:46 - 0:00:30 - 40000 / 50000
+INFO - 02/06/25 16:10:47 - 0:00:30 - initializing at generation: 1
+INFO - 02/06/25 16:10:47 - 0:00:30 - number of examples in the dataset: 50000
+INFO - 02/06/25 16:10:47 - 0:00:30 - max word length: 12
+INFO - 02/06/25 16:10:47 - 0:00:30 - number of unique characters in the vocabulary: 100
+INFO - 02/06/25 16:10:47 - 0:00:30 - vocabulary:
+INFO - 02/06/25 16:10:47 - 0:00:30 - ['V0', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38', 'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48', 'V49', 'V50', 'V51', 'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61', 'V62', 'V63', 'V64', 'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74', 'V75', 'V76', 'V77', 'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87', 'V88', 'V89', 'V90', 'V91', 'V92', 'V93', 'V94', 'V95', 'V96', 'V97', 'V98', 'V99']
+INFO - 02/06/25 16:10:47 - 0:00:30 - split up the dataset into 49000 training examples and 1000 test examples
+INFO - 02/06/25 16:10:47 - 0:00:30 - dataset determined that: vocab_size=101, block_size=161
+number of parameters: 0.22M
+INFO - 02/06/25 16:10:47 - 0:00:30 - model #params: 223296
+INFO - 02/06/25 16:10:47 - 0:00:30 - ============ Start of generation 1 ============
+INFO - 02/06/25 16:10:47 - 0:00:30 - Memory allocated:  1.26MB, reserved: 2.00MB
+INFO - 02/06/25 16:10:47 - 0:00:30 - training
+INFO - 02/06/25 16:10:48 - 0:00:31 - step 0 | loss 4.8288 | step time 246.45ms
+INFO - 02/06/25 16:10:51 - 0:00:34 - Memory allocated:  22.15MB, reserved: 392.00MB
+INFO - 02/06/25 16:10:51 - 0:00:34 - generating
+INFO - 02/06/25 16:10:51 - 0:00:35 - write_samples function called
+Printing 100 samples to checkpoint/debug/v91psbl3zv/out.txt.
+INFO - 02/06/25 16:10:53 - 0:00:37 - distribution of sample lengths: average: 31.36 max: 74
+INFO - 02/06/25 16:10:53 - 0:00:37 - decoding
+INFO - 02/06/25 16:10:53 - 0:00:37 - Decoding complete. Check the output in checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+INFO - 02/06/25 16:10:53 - 0:00:37 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:10:53 - 0:00:37 - ============ End of generation 1 ============
+INFO - 02/06/25 16:10:53 - 0:00:37 - launching search.jl
+INFO - 02/06/25 16:10:53 - 0:00:37 - JULIA_NUM_THREADS is set to 1
+Input file: checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+Using input file
+50006
+50006
+Data written to checkpoint/debug/v91psbl3zv/search_output_2.txt
+An example of an object with maximum reward (25.0):
+010100111101001111011000100111110000111111000
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_2.png
+Score distribution saved to checkpoint/debug/v91psbl3zv/distribution.txt
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_training_2.png
+Filtered score distribution saved to checkpoint/debug/v91psbl3zv/training_distribution.txt
+DEBUG: End of search_fc.jl script
+INFO - 02/06/25 16:11:00 - 0:00:44 - distribution of scores
+INFO - 02/06/25 16:11:00 - 0:00:44 - Score: 25.0, Count: 126
+INFO - 02/06/25 16:11:00 - 0:00:44 - Score: 24.0, Count: 210
+INFO - 02/06/25 16:11:00 - 0:00:44 - Score: 21.0, Count: 49666
+INFO - 02/06/25 16:11:00 - 0:00:44 - Score: 20.0, Count: 1
+INFO - 02/06/25 16:11:00 - 0:00:44 - Score: 19.0, Count: 1
+INFO - 02/06/25 16:11:00 - 0:00:44 - tokenizing
+INFO - 02/06/25 16:11:00 - 0:00:44 - Loading tokenizer from checkpoint/debug/v91psbl3zv/tokenizer_data/tokenizer.json...
+Tokenizing training set...
+INFO - 02/06/25 16:11:00 - 0:00:44 - 0 / 50000
+INFO - 02/06/25 16:11:00 - 0:00:44 - 10000 / 50000
+INFO - 02/06/25 16:11:00 - 0:00:44 - 20000 / 50000
+INFO - 02/06/25 16:11:01 - 0:00:44 - 30000 / 50000
+INFO - 02/06/25 16:11:01 - 0:00:44 - 40000 / 50000
+INFO - 02/06/25 16:11:01 - 0:00:45 - number of examples in the dataset: 50000
+INFO - 02/06/25 16:11:01 - 0:00:45 - max word length: 12
+INFO - 02/06/25 16:11:01 - 0:00:45 - number of unique characters in the vocabulary: 100
+INFO - 02/06/25 16:11:01 - 0:00:45 - vocabulary:
+INFO - 02/06/25 16:11:01 - 0:00:45 - ['V0', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38', 'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48', 'V49', 'V50', 'V51', 'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61', 'V62', 'V63', 'V64', 'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74', 'V75', 'V76', 'V77', 'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87', 'V88', 'V89', 'V90', 'V91', 'V92', 'V93', 'V94', 'V95', 'V96', 'V97', 'V98', 'V99']
+INFO - 02/06/25 16:11:01 - 0:00:45 - split up the dataset into 49000 training examples and 1000 test examples
+INFO - 02/06/25 16:11:01 - 0:00:45 - ============ Start of generation 2 ============
+INFO - 02/06/25 16:11:01 - 0:00:45 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:01 - 0:00:45 - training
+INFO - 02/06/25 16:11:02 - 0:00:45 - step 0 | loss 3.6791 | step time 380.80ms
+INFO - 02/06/25 16:11:05 - 0:00:49 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:05 - 0:00:49 - generating
+INFO - 02/06/25 16:11:05 - 0:00:49 - write_samples function called
+Printing 100 samples to checkpoint/debug/v91psbl3zv/out.txt.
+INFO - 02/06/25 16:11:07 - 0:00:51 - distribution of sample lengths: average: 30.04 max: 41
+INFO - 02/06/25 16:11:07 - 0:00:51 - decoding
+INFO - 02/06/25 16:11:07 - 0:00:51 - Decoding complete. Check the output in checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+INFO - 02/06/25 16:11:07 - 0:00:51 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:07 - 0:00:51 - ============ End of generation 2 ============
+INFO - 02/06/25 16:11:07 - 0:00:51 - launching search.jl
+INFO - 02/06/25 16:11:07 - 0:00:51 - JULIA_NUM_THREADS is set to 1
+Input file: checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+Using input file
+50006
+50006
+Data written to checkpoint/debug/v91psbl3zv/search_output_3.txt
+An example of an object with maximum reward (25.0):
+010100111101001111011000100111110000111111000
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_3.png
+Score distribution saved to checkpoint/debug/v91psbl3zv/distribution.txt
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_training_3.png
+Filtered score distribution saved to checkpoint/debug/v91psbl3zv/training_distribution.txt
+DEBUG: End of search_fc.jl script
+INFO - 02/06/25 16:11:14 - 0:00:58 - distribution of scores
+INFO - 02/06/25 16:11:14 - 0:00:58 - Score: 25.0, Count: 126
+INFO - 02/06/25 16:11:14 - 0:00:58 - Score: 24.0, Count: 210
+INFO - 02/06/25 16:11:14 - 0:00:58 - Score: 21.0, Count: 49664
+INFO - 02/06/25 16:11:14 - 0:00:58 - Score: 19.0, Count: 1
+INFO - 02/06/25 16:11:14 - 0:00:58 - Score: 18.0, Count: 1
+INFO - 02/06/25 16:11:14 - 0:00:58 - Score: 17.0, Count: 1
+INFO - 02/06/25 16:11:14 - 0:00:58 - tokenizing
+INFO - 02/06/25 16:11:14 - 0:00:58 - Loading tokenizer from checkpoint/debug/v91psbl3zv/tokenizer_data/tokenizer.json...
+Tokenizing training set...
+INFO - 02/06/25 16:11:14 - 0:00:58 - 0 / 50000
+INFO - 02/06/25 16:11:14 - 0:00:58 - 10000 / 50000
+INFO - 02/06/25 16:11:14 - 0:00:58 - 20000 / 50000
+INFO - 02/06/25 16:11:14 - 0:00:58 - 30000 / 50000
+INFO - 02/06/25 16:11:15 - 0:00:58 - 40000 / 50000
+INFO - 02/06/25 16:11:15 - 0:00:58 - number of examples in the dataset: 50000
+INFO - 02/06/25 16:11:15 - 0:00:58 - max word length: 12
+INFO - 02/06/25 16:11:15 - 0:00:58 - number of unique characters in the vocabulary: 100
+INFO - 02/06/25 16:11:15 - 0:00:58 - vocabulary:
+INFO - 02/06/25 16:11:15 - 0:00:58 - ['V0', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38', 'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48', 'V49', 'V50', 'V51', 'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61', 'V62', 'V63', 'V64', 'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74', 'V75', 'V76', 'V77', 'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87', 'V88', 'V89', 'V90', 'V91', 'V92', 'V93', 'V94', 'V95', 'V96', 'V97', 'V98', 'V99']
+INFO - 02/06/25 16:11:15 - 0:00:58 - split up the dataset into 49000 training examples and 1000 test examples
+INFO - 02/06/25 16:11:15 - 0:00:58 - ============ Start of generation 3 ============
+INFO - 02/06/25 16:11:15 - 0:00:58 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:15 - 0:00:58 - training
+INFO - 02/06/25 16:11:15 - 0:00:59 - step 0 | loss 3.5326 | step time 331.46ms
+INFO - 02/06/25 16:11:19 - 0:01:02 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:19 - 0:01:02 - generating
+INFO - 02/06/25 16:11:19 - 0:01:02 - write_samples function called
+Printing 100 samples to checkpoint/debug/v91psbl3zv/out.txt.
+INFO - 02/06/25 16:11:21 - 0:01:05 - distribution of sample lengths: average: 29.58 max: 40
+INFO - 02/06/25 16:11:21 - 0:01:05 - decoding
+INFO - 02/06/25 16:11:21 - 0:01:05 - Decoding complete. Check the output in checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+INFO - 02/06/25 16:11:21 - 0:01:05 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:21 - 0:01:05 - ============ End of generation 3 ============
+INFO - 02/06/25 16:11:21 - 0:01:05 - launching search.jl
+INFO - 02/06/25 16:11:21 - 0:01:05 - JULIA_NUM_THREADS is set to 1
+Input file: checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+Using input file
+50011
+50011
+Data written to checkpoint/debug/v91psbl3zv/search_output_4.txt
+An example of an object with maximum reward (25.0):
+010100111101001111011000100111110000111111000
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_4.png
+Score distribution saved to checkpoint/debug/v91psbl3zv/distribution.txt
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_training_4.png
+Filtered score distribution saved to checkpoint/debug/v91psbl3zv/training_distribution.txt
+DEBUG: End of search_fc.jl script
+INFO - 02/06/25 16:11:28 - 0:01:11 - distribution of scores
+INFO - 02/06/25 16:11:28 - 0:01:11 - Score: 25.0, Count: 126
+INFO - 02/06/25 16:11:28 - 0:01:11 - Score: 24.0, Count: 210
+INFO - 02/06/25 16:11:28 - 0:01:11 - Score: 21.0, Count: 49668
+INFO - 02/06/25 16:11:28 - 0:01:11 - Score: 20.0, Count: 2
+INFO - 02/06/25 16:11:28 - 0:01:11 - Score: 19.0, Count: 4
+INFO - 02/06/25 16:11:28 - 0:01:11 - Score: 18.0, Count: 2
+INFO - 02/06/25 16:11:28 - 0:01:11 - Score: 16.0, Count: 1
+INFO - 02/06/25 16:11:28 - 0:01:11 - tokenizing
+INFO - 02/06/25 16:11:28 - 0:01:11 - Loading tokenizer from checkpoint/debug/v91psbl3zv/tokenizer_data/tokenizer.json...
+Tokenizing training set...
+INFO - 02/06/25 16:11:28 - 0:01:11 - 0 / 50000
+INFO - 02/06/25 16:11:28 - 0:01:11 - 10000 / 50000
+INFO - 02/06/25 16:11:28 - 0:01:12 - 20000 / 50000
+INFO - 02/06/25 16:11:28 - 0:01:12 - 30000 / 50000
+INFO - 02/06/25 16:11:28 - 0:01:12 - 40000 / 50000
+INFO - 02/06/25 16:11:28 - 0:01:12 - number of examples in the dataset: 50000
+INFO - 02/06/25 16:11:28 - 0:01:12 - max word length: 12
+INFO - 02/06/25 16:11:28 - 0:01:12 - number of unique characters in the vocabulary: 100
+INFO - 02/06/25 16:11:28 - 0:01:12 - vocabulary:
+INFO - 02/06/25 16:11:28 - 0:01:12 - ['V0', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38', 'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48', 'V49', 'V50', 'V51', 'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61', 'V62', 'V63', 'V64', 'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74', 'V75', 'V76', 'V77', 'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87', 'V88', 'V89', 'V90', 'V91', 'V92', 'V93', 'V94', 'V95', 'V96', 'V97', 'V98', 'V99']
+INFO - 02/06/25 16:11:28 - 0:01:12 - split up the dataset into 49000 training examples and 1000 test examples
+INFO - 02/06/25 16:11:28 - 0:01:12 - ============ Start of generation 4 ============
+INFO - 02/06/25 16:11:28 - 0:01:12 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:28 - 0:01:12 - training
+INFO - 02/06/25 16:11:29 - 0:01:13 - step 0 | loss 3.3607 | step time 277.95ms
+INFO - 02/06/25 16:11:32 - 0:01:16 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:32 - 0:01:16 - generating
+INFO - 02/06/25 16:11:32 - 0:01:16 - write_samples function called
+Printing 100 samples to checkpoint/debug/v91psbl3zv/out.txt.
+INFO - 02/06/25 16:11:35 - 0:01:18 - distribution of sample lengths: average: 30.1 max: 37
+INFO - 02/06/25 16:11:35 - 0:01:18 - decoding
+INFO - 02/06/25 16:11:35 - 0:01:18 - Decoding complete. Check the output in checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+INFO - 02/06/25 16:11:35 - 0:01:18 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:35 - 0:01:18 - ============ End of generation 4 ============
+INFO - 02/06/25 16:11:35 - 0:01:18 - launching search.jl
+INFO - 02/06/25 16:11:35 - 0:01:18 - JULIA_NUM_THREADS is set to 1
+Input file: checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+Using input file
+50008
+50008
+Data written to checkpoint/debug/v91psbl3zv/search_output_5.txt
+An example of an object with maximum reward (25.0):
+010100111101001111011000100111110000111111000
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_5.png
+Score distribution saved to checkpoint/debug/v91psbl3zv/distribution.txt
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_training_5.png
+Filtered score distribution saved to checkpoint/debug/v91psbl3zv/training_distribution.txt
+DEBUG: End of search_fc.jl script
+INFO - 02/06/25 16:11:41 - 0:01:25 - distribution of scores
+INFO - 02/06/25 16:11:41 - 0:01:25 - Score: 25.0, Count: 126
+INFO - 02/06/25 16:11:41 - 0:01:25 - Score: 24.0, Count: 210
+INFO - 02/06/25 16:11:41 - 0:01:25 - Score: 21.0, Count: 49669
+INFO - 02/06/25 16:11:41 - 0:01:25 - Score: 19.0, Count: 3
+INFO - 02/06/25 16:11:41 - 0:01:25 - Score: 18.0, Count: 1
+INFO - 02/06/25 16:11:41 - 0:01:25 - Score: 17.0, Count: 1
+INFO - 02/06/25 16:11:41 - 0:01:25 - tokenizing
+INFO - 02/06/25 16:11:41 - 0:01:25 - Loading tokenizer from checkpoint/debug/v91psbl3zv/tokenizer_data/tokenizer.json...
+Tokenizing training set...
+INFO - 02/06/25 16:11:41 - 0:01:25 - 0 / 50000
+INFO - 02/06/25 16:11:41 - 0:01:25 - 10000 / 50000
+INFO - 02/06/25 16:11:41 - 0:01:25 - 20000 / 50000
+INFO - 02/06/25 16:11:41 - 0:01:25 - 30000 / 50000
+INFO - 02/06/25 16:11:42 - 0:01:25 - 40000 / 50000
+INFO - 02/06/25 16:11:42 - 0:01:25 - number of examples in the dataset: 50000
+INFO - 02/06/25 16:11:42 - 0:01:25 - max word length: 12
+INFO - 02/06/25 16:11:42 - 0:01:25 - number of unique characters in the vocabulary: 100
+INFO - 02/06/25 16:11:42 - 0:01:25 - vocabulary:
+INFO - 02/06/25 16:11:42 - 0:01:25 - ['V0', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38', 'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48', 'V49', 'V50', 'V51', 'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61', 'V62', 'V63', 'V64', 'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74', 'V75', 'V76', 'V77', 'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87', 'V88', 'V89', 'V90', 'V91', 'V92', 'V93', 'V94', 'V95', 'V96', 'V97', 'V98', 'V99']
+INFO - 02/06/25 16:11:42 - 0:01:25 - split up the dataset into 49000 training examples and 1000 test examples
+INFO - 02/06/25 16:11:42 - 0:01:25 - ============ Start of generation 5 ============
+INFO - 02/06/25 16:11:42 - 0:01:25 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:42 - 0:01:25 - training
+INFO - 02/06/25 16:11:42 - 0:01:26 - step 0 | loss 3.3370 | step time 397.33ms
+INFO - 02/06/25 16:11:46 - 0:01:29 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:46 - 0:01:29 - generating
+INFO - 02/06/25 16:11:46 - 0:01:29 - write_samples function called
+Printing 100 samples to checkpoint/debug/v91psbl3zv/out.txt.
+INFO - 02/06/25 16:11:48 - 0:01:31 - distribution of sample lengths: average: 30.21 max: 36
+INFO - 02/06/25 16:11:48 - 0:01:31 - decoding
+INFO - 02/06/25 16:11:48 - 0:01:31 - Decoding complete. Check the output in checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+INFO - 02/06/25 16:11:48 - 0:01:31 - Memory allocated:  22.15MB, reserved: 3314.00MB
+INFO - 02/06/25 16:11:48 - 0:01:31 - ============ End of generation 5 ============
+INFO - 02/06/25 16:11:48 - 0:01:31 - launching search.jl
+INFO - 02/06/25 16:11:48 - 0:01:31 - JULIA_NUM_THREADS is set to 1
+Input file: checkpoint/debug/v91psbl3zv/transformer-output-decoded.txt
+Using input file
+50006
+50006
+Data written to checkpoint/debug/v91psbl3zv/search_output_6.txt
+An example of an object with maximum reward (25.0):
+010100111101001111011000100111110000111111000
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_6.png
+Score distribution saved to checkpoint/debug/v91psbl3zv/distribution.txt
+Detected locale "C" with character encoding "ANSI_X3.4-1968", which is not UTF-8.
+Qt depends on a UTF-8 locale, and has switched to "C.UTF-8" instead.
+If this causes problems, reconfigure your locale. See the locale(1) manual
+for more information.
+Plot saved to checkpoint/debug/v91psbl3zv/plot_training_6.png
+Filtered score distribution saved to checkpoint/debug/v91psbl3zv/training_distribution.txt
+DEBUG: End of search_fc.jl script
+INFO - 02/06/25 16:11:54 - 0:01:38 - distribution of scores
+INFO - 02/06/25 16:11:54 - 0:01:38 - Score: 25.0, Count: 126
+INFO - 02/06/25 16:11:54 - 0:01:38 - Score: 24.0, Count: 210
+INFO - 02/06/25 16:11:54 - 0:01:38 - Score: 21.0, Count: 49666
+INFO - 02/06/25 16:11:54 - 0:01:38 - Score: 20.0, Count: 4
+INFO - 02/06/25 16:11:54 - 0:01:38 - Score: 19.0, Count: 2
+INFO - 02/06/25 16:11:54 - 0:01:38 - tokenizing
+INFO - 02/06/25 16:11:54 - 0:01:38 - Loading tokenizer from checkpoint/debug/v91psbl3zv/tokenizer_data/tokenizer.json...
+Tokenizing training set...
+INFO - 02/06/25 16:11:54 - 0:01:38 - 0 / 50000
+INFO - 02/06/25 16:11:54 - 0:01:38 - 10000 / 50000
+INFO - 02/06/25 16:11:54 - 0:01:38 - 20000 / 50000
+INFO - 02/06/25 16:11:54 - 0:01:38 - 30000 / 50000
+INFO - 02/06/25 16:11:55 - 0:01:38 - 40000 / 50000
+INFO - 02/06/25 16:11:55 - 0:01:38 - number of examples in the dataset: 50000
+INFO - 02/06/25 16:11:55 - 0:01:38 - max word length: 12
+INFO - 02/06/25 16:11:55 - 0:01:38 - number of unique characters in the vocabulary: 100
+INFO - 02/06/25 16:11:55 - 0:01:38 - vocabulary:
+INFO - 02/06/25 16:11:55 - 0:01:38 - ['V0', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38', 'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48', 'V49', 'V50', 'V51', 'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61', 'V62', 'V63', 'V64', 'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74', 'V75', 'V76', 'V77', 'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87', 'V88', 'V89', 'V90', 'V91', 'V92', 'V93', 'V94', 'V95', 'V96', 'V97', 'V98', 'V99']
+INFO - 02/06/25 16:11:55 - 0:01:38 - split up the dataset into 49000 training examples and 1000 test examples

@@ -21,7 +21,6 @@ function find_all_triangles(adjmat::Matrix{Int})
 end
 
 
-
 function convert_adjmat_to_string(adjmat::Matrix{Int})::String
     entries = []
 
