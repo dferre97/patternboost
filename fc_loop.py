@@ -4,11 +4,6 @@ from utils import bool_flag, initialize_exp
 import numpy as np
 import time
 
-from tokenizers import Tokenizer
-from tokenizers.models import BPE
-from tokenizers.trainers import BpeTrainer
-from tokenizers.pre_tokenizers import Whitespace
-
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
