@@ -20,13 +20,37 @@ const DEBUG_MODE = false
 # Helper function to print debug info
 function debug_print(msg)
     if DEBUG_MODE
-        println("DEBUG: ", msg)
+        myprintln("DEBUG: $msg")
     end
+end
+function myprintln(msg)
+    println(msg)
+    println(julia_log_file, msg)
+end
+function run_and_time(f, args...)
+    time = @elapsed res = f(args...)
+    myprintln("Time taken by $(nameof(f)): $time seconds")
+    return res
 end
 #########################################################################################
 
 include("constants.jl")
 
+function add_commas(input_string::String)
+    n = N - 1
+    result = ""
+    index = 1
+    while n > 0 && index <= length(input_string)
+        if index + n - 1 <= length(input_string)
+            result *= input_string[index:index + n - 1] * ","
+        else
+            result *= input_string[index:end]
+        end
+        index += n
+        n -= 1
+    end
+    return result[1:end-1]  # Remove the trailing comma
+end
 
 function find_next_available_filename(base::String, extension::String)
     i = 1
@@ -52,6 +76,7 @@ function write_output_to_file(db)
         while lines_written < final_database_size && curr_rew_index <= length(rewards)
             curr_rew = rewards[curr_rew_index]
             for obj in db.rewards[curr_rew][1:min(final_database_size - lines_written, length(db.rewards[curr_rew]))]
+                # obj = add_commas(obj)
                 write(file, obj * "\n")
             end
             lines_written += length(db.rewards[curr_rew])
@@ -59,9 +84,9 @@ function write_output_to_file(db)
         end
         
     end
-    println("Data written to $(filename)")
-    println("An example of an object with maximum reward (" * string(rewards[1]) * "):")
-    println(db.rewards[rewards[1]][1])
+    myprintln("Data written to $(filename)")
+    myprintln("An example of an object with maximum reward (" * string(rewards[1]) * "):")
+    myprintln(db.rewards[rewards[1]][1])
 end
 
 function write_plot_to_file(db)
@@ -79,7 +104,7 @@ function write_plot_to_file(db)
     
     # Save the plot to file
     savefig(filename)
-    println("Plot saved to $(filename)")
+    myprintln("Plot saved to $(filename)")
 
     # Create the .txt file and write the score distribution
     txt_filename = filename = @sprintf("%s/%s.%s", write_path, "distribution", "txt")
@@ -88,7 +113,7 @@ function write_plot_to_file(db)
             println(f, "Score: $rew, Count: $count")
         end
     end
-    println("Score distribution saved to $(txt_filename)")
+    myprintln("Score distribution saved to $(txt_filename)")
 
     # Print the training set as well
     cumulative_count = 0
@@ -116,16 +141,17 @@ function write_plot_to_file(db)
     
     # Save the plot to file
     savefig(filename)
-    println("Plot saved to $(filename)")
+    myprintln("Plot saved to $(filename)")
 
     # Create the .txt file for the filtered data
     txt_filename = @sprintf("%s/%s.%s", write_path, "training_distribution", "txt")
-    open(txt_filename, "w") do f
+    open(txt_filename, "a") do f
         for (rew, count) in zip(filtered_rewards, filtered_counts)
             println(f, "Score: $rew, Count: $count")
         end
+        println(f, "------------------------------------------")
     end
-    println("Filtered score distribution saved to $(txt_filename)")
+    myprintln("Filtered score distribution saved to $(txt_filename)")
 end
 
 
@@ -146,11 +172,11 @@ function initial_lines()
             break
         end
     end
-    println("Input file: ", input_file)  # Debug print
+    myprintln("Input file: $input_file")  # Debug print
 
     lines = String[]  # Create an empty vector of strings
     if input_file != ""
-        println("Using input file")
+        myprintln("Using input file")
         open(input_file, "r") do file
             for line in eachline(file)
                 if length(line) == length(empty_starting_point())
@@ -159,7 +185,7 @@ function initial_lines()
             end
         end
     else 
-        println("No input file provided")
+        myprintln("No input file provided")
         for _ in 1:num_initial_empty_objects
             push!(lines, empty_starting_point())
         end
@@ -214,7 +240,7 @@ function print_db(db)
     end
     # shrink database if necessary
     if db_size > 2*target_db_size
-        println(" - Shrinking database to $target_db_size best objects")
+        myprintln(" - Shrinking database to $target_db_size best objects")
         shrink!(db)
         rewards = [ rew for rew in keys(db.rewards) ]
         sort!(rewards, rev=true)
@@ -300,7 +326,7 @@ function shrink!(db)
                     try
                         delete!(db.objects, obj)
                     catch e 
-                        println("whoopsie")
+                        myprintln("whoopsie")
                     end
                 end
                 db.rewards[rew] = db.rewards[rew][1:lg-k]
@@ -319,9 +345,9 @@ end
 
 function main()
     db = new_db() 
-    lines = initial_lines()
-    println(length(lines))
-    println(length(Set(lines)))
+    lines = run_and_time(initial_lines)
+    myprintln("Total number of initial inputs: $(length(lines))")
+    myprintln("Number of unique initial inputs: $(length(Set(lines)))")
     #add_db!(db, lines)
     start_idx = 1
     steps::Int = 0
@@ -335,9 +361,8 @@ function main()
         print_db(db)        
     end
     print_db(db)
-    write_output_to_file(db)
-    write_plot_to_file(db)
-    debug_print("End of search_fc.jl script")
+    run_and_time(write_output_to_file, db)
+    run_and_time(write_plot_to_file, db)
 end
 
 
@@ -352,9 +377,15 @@ nb_local_searches = length(ARGS) >= 2 ? parse(Int, ARGS[2]) : 120
 num_initial_empty_objects = length(ARGS) >= 3 ? parse(Int, ARGS[3]) : 5000
 final_database_size = length(ARGS) >= 4 ? parse(Int, ARGS[4]) : 500
 target_db_size = length(ARGS) >= 5 ? parse(Int, ARGS[5]) : 5000
-main()
 
-
+script_name = basename(@__FILE__)
+julia_log_file = open(joinpath(write_path, script_name * ".log"), "a")
+myprintln("#########################################################################################")
+myprintln("#########################################################################################")
+myprintln("Start of $script_name script")
+run_and_time(main)
+myprintln("End of $script_name script")
+close(julia_log_file)
 
 
 

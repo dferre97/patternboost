@@ -17,7 +17,7 @@ from torch.utils.data.dataloader import DataLoader
 from dataclasses import dataclass
 from typing import List
 
-from makemoretokens import ModelConfig, CharDataset, Transformer, Bigram, MLP, RNN, BoW, InfiniteDataLoader, evaluate, generate
+from makemoretokens import ModelConfig, Transformer, InfiniteDataLoader, evaluate, generate
 import os
 import argparse
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -32,13 +32,13 @@ def get_parser():
     # parser.add_argument('--sample-only', type=int, default=5000, help="sample the specified number from the model in each loop")
     # parser.add_argument('--nb_threads', type=int, default=1, help='Number of cpu threads')
     # parser.add_argument('--nb_local_searches', type=int, default=120, help='This only matters when using multithreading, then it should be a multiple of the number of threads used')
-    parser.add_argument('--num_initial_empty_objects', type=int, default=500000, help='number of initial rollouts, before the first learning loop')
-    parser.add_argument('--final_database_size', type=int, default=50000, help='training set size')
-    parser.add_argument('--target_db_size', type=int, default=500000, help='size of cache during local search loop, should be larger than training set size')
+    parser.add_argument('--num_initial_empty_objects', type=int, default=5000, help='number of initial rollouts, before the first learning loop')
+    parser.add_argument('--final_database_size', type=int, default=500, help='training set size')
+    parser.add_argument('--target_db_size', type=int, default=5000, help='size of cache during local search loop, should be larger than training set size')
     parser.add_argument('--sample-only', type=int, default=100, help="sample the specified number from the model in each loop")
     # parser.add_argument('--sample-only', type=int, default=500000, help="sample the specified number from the model in each loop")
     parser.add_argument('--nb_threads', type=int, default=1, help='Number of cpu threads')
-    parser.add_argument('--nb_local_searches', type=int, default=1200, help='This only matters when using multithreading, then it should be a multiple of the number of threads used')
+    parser.add_argument('--nb_local_searches', type=int, default=120, help='This only matters when using multithreading, then it should be a multiple of the number of threads used')
     
 
     # Makemore params
@@ -61,9 +61,10 @@ def get_parser():
     parser.add_argument('--learning-rate', '-l', type=float, default=5e-4, help="learning rate")
     parser.add_argument('--weight-decay', '-w', type=float, default=0.01, help="weight decay")
     # evaluation against known "good sequences"
-    parser.add_argument('--max-output-length', type=int, default=160, help="maximum output length")
+    # TODO - I don't think output length makes sense since it is fixed, probably should be removed
+    parser.add_argument('--max-output-length', type=int, default=45, help="maximum output length")
     parser.add_argument('--gen_batch_size', type=int, default=1000, help="generation batch size")
-    parser.add_argument('--n_tokens', type=int, default=100, help="nr tokens in tokenizer")
+    parser.add_argument('--n_tokens', type=int, default=2, help="nr tokens in tokenizer")
     parser.add_argument('--temperature', type=float, default=1.0, help="temperature")
     
 
@@ -88,89 +89,15 @@ def get_parser():
 
     return parser
 
-
-
-def tokenize(input_file_path, n_tokens):
-
-    directory_name = args.dump_path + '/' + "tokenizer_data"
-    tokenizer_file = directory_name + "/tokenizer.json"
-
-    if os.path.exists(tokenizer_file):
-        logger.info(f"Loading tokenizer from {tokenizer_file}...")
-        tokenizer = Tokenizer.from_file(tokenizer_file)
-    else:
-        tokenizer = Tokenizer(BPE())
-        tokenizer.pre_tokenizer = Whitespace()
-    
-        trainer = BpeTrainer(vocab_size=n_tokens)
-
-        source_file_path = args.dump_path+'/search_output_1.txt'
-        destination_file_path = args.dump_path+"/temp.txt"
-
-        logger.info(f'Created {destination_file_path} and training tokenizer...')
-        # Reading the first 100,000 lines from the source file and training the tokenizer on them
-        with open(source_file_path, 'r') as source_file, open(destination_file_path, 'w') as destination_file:
-            for i in range(5_000):
-                line = source_file.readline()
-                if not line:
-                    break
-                destination_file.write(line)
-
-        if not os.path.isdir(directory_name):
-            # Create the directory
-            os.mkdir(directory_name)
-            logger.info(f"Directory '{directory_name}' created.")
-
-        tokenizer.train([destination_file_path], trainer)
-        tokenizer.save(tokenizer_file)
-
-        if os.path.exists(destination_file_path):
-            os.remove(destination_file_path)
-            logger.info(f"File '{destination_file_path}' has been deleted.")
-
-    # input_file_path = input_path
-    with open(input_file_path, "r") as file:
-        text_data = [line.strip() for line in file]
-
-    # Now create tokenized output file
-    token_file_out = input_file_path.rsplit('.', 1)[0] + '-tokenized.txt'
-    with open(token_file_out, "w") as file:
-        print("Tokenizing training set...")
-        for i, sequence in enumerate(text_data):
-            if i % 10000 == 0:
-                logger.info(f"{i} / {len(text_data)}")
-            myids = tokenizer.encode(sequence).ids
-            file.write(','.join(["V" + str(id) for id in myids]))
-            file.write("\n")
-
 def decode():
-    # Load the tokenizer from the saved file
-    tokenizer_path = os.path.join(args.dump_path+'/tokenizer_data', "tokenizer.json")
-    if not os.path.exists(tokenizer_path):
-        logger.error(f"No tokenizer found at {tokenizer_path}. Please check the path and try again.")
-
-    tokenizer = Tokenizer.from_file(tokenizer_path)
-
-    def decode_tokens(token_line):
-        # Remove the 'V' prefix and convert to integers
-        #print(token_line)
-        token_ids = [int(token[1:]) for token in token_line.split(',')]
-        # Decode the token ids to text
-        
-        return tokenizer.decode(token_ids).replace(" ","")
-
-
-    # Process the input file
-    input_file = args.dump_path+"/out.txt"
+    input_file = args.dump_path + "/out.txt"
     if os.path.exists(input_file):
         with open(input_file, 'r') as file:
             tokenized_lines = file.readlines()
 
-        # Decode each line and collect the results
-        decoded_text = [decode_tokens(line.strip()) for line in tokenized_lines if len(line) > 1]
+        decoded_text = [line.strip() for line in tokenized_lines if len(line) > 1]
 
-        # Write the decoded text to the output file
-        output_file = args.dump_path+"/transformer-output-decoded.txt"
+        output_file = args.dump_path + "/transformer-output-decoded.txt"
         with open(output_file, 'w') as file:
             for line in decoded_text:
                 file.write(line + '\n')
@@ -179,25 +106,69 @@ def decode():
     else:
         logger.info(f"Error: The file {input_file} does not exist.")
 
-def create_datasets(input_file):
+class CharDataset(Dataset):
 
+    def __init__(self, words, chars, max_word_length):
+        self.words = words
+        self.chars = chars
+        self.max_word_length = max_word_length
+        self.stoi = {ch: i + 1 for i, ch in enumerate(self.chars)}  # bijection '0' <-> 1, '1' <-> 2
+        self.itos = {i: s for s, i in self.stoi.items()}  # inverse mapping: 1 -> '0', 2 -> '1'
+
+    def __len__(self):
+        return len(self.words)
+
+    def contains(self, word):
+        return word in self.words
+
+    def get_vocab_size(self):
+        return len(self.chars) + 1  # all the possible characters and special 0 token
+
+    def get_output_length(self):
+        return self.max_word_length + 1  # <START> token followed by words
+
+    def encode(self, word):
+        ix = torch.tensor([self.stoi[w] for w in word], dtype=torch.long)
+        return ix
+
+    def decode(self, ix):
+        try:
+            word = ''.join(self.itos[i] for i in ix)
+            return word
+        except KeyError as e:
+            print(f"KeyError: {e} for index {ix}")
+            raise
+
+    def __getitem__(self, idx):
+        word = self.words[idx]
+        ix = self.encode(word)
+        x = torch.zeros(self.max_word_length + 1, dtype=torch.long)
+        y = torch.zeros(self.max_word_length + 1, dtype=torch.long)
+        x[1:1 + len(ix)] = ix
+        y[:len(ix)] = ix
+        y[len(ix) + 1:] = -1  # index -1 will mask the loss at the inactive locations
+        return x, y
+
+def create_datasets(input_file):
     # preprocessing of the input text file
     with open(input_file, 'r') as f:
         data = f.read()
     words = data.splitlines()
     words = [w.strip() for w in words] # get rid of any leading or trailing white space
     words = [w for w in words if w] # get rid of any empty strings
-    words = [w.split(",") for w in words]
+    words = [list(w) for w in words] # convert each word into a list of characters
 
     # maybe a tad hacky: we sort our dataset so that it is ordered V1, V2, .... V10, V11 ....
-    chars = sorted(list(set([i for word in words for i in word])), key=lambda x: int(x[1:]))
+    # chars = sorted(list(set([i for word in words for i in word])), key=lambda x: int(x[1:]))
+    chars = ['0', '1']
+
 
     max_word_length = max(len(w) for w in words)
     logger.info(f"number of examples in the dataset: {len(words)}")
     logger.info(f"max word length: {max_word_length}")
     logger.info(f"number of unique characters in the vocabulary: {len(chars)}")
-    logger.info("vocabulary:")
-    logger.info(chars)
+    # logger.info("vocabulary:")
+    # logger.info(chars)
     assert max_word_length <= args.max_output_length, f'block size too large {max_word_length} vs {args.max_output_length}'
         
     # partition the input data into a training and the test set
@@ -287,18 +258,18 @@ if __name__ == '__main__':
 
     # init datasets
     for i in range(1,args.max_epochs):
-        if not os.path.isfile(f"{args.dump_path}/search_output_{i}-tokenized.txt"):
+        if not os.path.isfile(f"{args.dump_path}/search_output_{i}.txt"):
             break
     initial_gen = i-1
     if initial_gen == 0:
         os.environ["JULIA_NUM_THREADS"] = str(args.nb_threads)  # Set the environment variable
         logger.info(f"JULIA_NUM_THREADS is set to {os.environ['JULIA_NUM_THREADS']}")
         subprocess.run(["julia","search_fc.jl", args.dump_path, str(args.nb_local_searches), str(args.num_initial_empty_objects), str(args.final_database_size), str(args.target_db_size)])
-        tokenize(f"{args.dump_path}/search_output_1.txt", args.n_tokens)
+        # tokenize(f"{args.dump_path}/search_output_1.txt", args.n_tokens)
         initial_gen = 1
     
     logger.info(f"initializing at generation: {initial_gen}")
-    input_file = args.dump_path + f"/search_output_{initial_gen}-tokenized.txt"
+    input_file = args.dump_path + f"/search_output_{initial_gen}.txt"
     train_dataset, test_dataset = create_datasets(input_file)
     vocab_size = args.n_tokens + 1
     block_size = args.max_output_length + 1
@@ -409,7 +380,7 @@ if __name__ == '__main__':
         tot_sum = 0
         tot_max = 0
         out_file = args.dump_path + "/out.txt"
-        in_file = args.dump_path + f"/search_output_{generation}-tokenized.txt"
+        in_file = args.dump_path + f"/search_output_{generation}.txt"
         #infilz = f"{args.dump_path}/search_output_{generation}.txt"
         with open(in_file, 'r') as f:
             data = f.read()
@@ -449,7 +420,7 @@ if __name__ == '__main__':
 
         
         logger.info("tokenizing")
-        tokenize(f"{args.dump_path}/search_output_{generation+1}.txt", args.n_tokens)
-        input_file = args.dump_path + f"/search_output_{generation+1}-tokenized.txt"
+        # tokenize(f"{args.dump_path}/search_output_{generation+1}.txt", args.n_tokens)
+        input_file = args.dump_path + f"/search_output_{generation+1}.txt"
         train_dataset, test_dataset = create_datasets(input_file)
 

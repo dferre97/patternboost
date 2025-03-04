@@ -1,6 +1,0 @@
-Score: 25.0, Count: 126
-Score: 24.0, Count: 210
-Score: 21.0, Count: 49665
-Score: 20.0, Count: 1
-Score: 19.0, Count: 7
-Score: 18.0, Count: 4

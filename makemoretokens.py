@@ -158,273 +158,6 @@ class Transformer(nn.Module):
         return logits, loss
 
 # -----------------------------------------------------------------------------
-# Bag of Words (BoW) language model
-
-class CausalBoW(nn.Module):
-    """
-    Causal bag of words. Averages the preceding elements and looks suspiciously like
-    a CausalAttention module you'd find in a transformer, for no apparent reason at all ;)
-    """
-    def __init__(self, config):
-        super().__init__()
-
-        # used to mask out vectors and preserve autoregressive property
-        self.block_size = config.block_size
-        self.register_buffer("bias", torch.tril(torch.ones(config.block_size, config.block_size))
-                            .view(1, config.block_size, config.block_size))
-
-    def forward(self, x):
-        B, T, C = x.size() # batch size, sequence length, n_embd
-
-        # do the weighted average of all preceeding token features
-        att = torch.zeros((B, T, T), device=x.device)
-        att = att.masked_fill(self.bias[:,:T,:T] == 0, float('-inf'))
-        att = F.softmax(att, dim=-1)
-        y = att @ x # (B, T, T) x (B, T, C) -> (B, T, C)
-
-        return y
-
-class BoWBlock(nn.Module):
-    """ collects BoW features and adds an MLP """
-
-    def __init__(self, config):
-        super().__init__()
-
-        # Causal BoW module
-        self.cbow = CausalBoW(config)
-        # MLP assembler
-        self.mlp = nn.ModuleDict(dict(
-            c_fc    = nn.Linear(config.n_embd, config.n_embd2),
-            c_proj  = nn.Linear(config.n_embd2, config.n_embd),
-        ))
-        m = self.mlp
-        self.mlpf = lambda x: m.c_proj(F.tanh(m.c_fc(x))) # MLP forward
-
-    def forward(self, x):
-        x = x + self.cbow(x)
-        x = x + self.mlpf(x)
-        return x
-
-class BoW(nn.Module):
-    """
-    takes the previous block_size tokens, encodes them with a lookup table,
-    also encodes their positions with lookup table, then averages all of those
-    embeddings up and uses that to predict the next token.
-    """
-
-    def __init__(self, config):
-        super().__init__()
-        self.block_size = config.block_size
-        self.vocab_size = config.vocab_size
-        # token embedding
-        self.wte = nn.Embedding(config.vocab_size, config.n_embd)
-        # position embedding
-        self.wpe = nn.Embedding(config.block_size, config.n_embd)
-        # context block
-        self.context_block = BoWBlock(config)
-        # language model head decoder layer
-        self.lm_head = nn.Linear(config.n_embd, self.vocab_size)
-
-    def get_block_size(self):
-        return self.block_size
-
-    def forward(self, idx, targets=None):
-
-        device = idx.device
-        b, t = idx.size()
-        assert t <= self.block_size, f"Cannot forward sequence of length {t}, block size is only {self.block_size}"
-        pos = torch.arange(0, t, dtype=torch.long, device=device).unsqueeze(0) # shape (1, t)
-
-        # forward the token and position embedding layers
-        tok_emb = self.wte(idx) # token embeddings of shape (b, t, n_embd)
-        pos_emb = self.wpe(pos) # position embeddings of shape (1, t, n_embd)
-        # add and run through the decoder MLP
-        x = tok_emb + pos_emb
-        # run the bag of words context module
-        x = self.context_block(x)
-        # decode to next token probability
-        logits = self.lm_head(x)
-
-        # if we are given some desired targets also calculate the loss
-        loss = None
-        if targets is not None:
-            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
-
-        return logits, loss
-
-# -----------------------------------------------------------------------------
-"""
-Recurrent Neural Net language model: either a vanilla RNN recurrence or a GRU.
-Did not implement an LSTM because its API is a bit more annoying as it has
-both a hidden state and a cell state, but it's very similar to GRU and in
-practice works just as well.
-"""
-
-class RNNCell(nn.Module):
-    """
-    the job of a 'Cell' is to:
-    take input at current time step x_{t} and the hidden state at the
-    previous time step h_{t-1} and return the resulting hidden state
-    h_{t} at the current timestep
-    """
-    def __init__(self, config):
-        super().__init__()
-        self.xh_to_h = nn.Linear(config.n_embd + config.n_embd2, config.n_embd2)
-
-    def forward(self, xt, hprev):
-        xh = torch.cat([xt, hprev], dim=1)
-        ht = F.tanh(self.xh_to_h(xh))
-        return ht
-
-class GRUCell(nn.Module):
-    """
-    same job as RNN cell, but a bit more complicated recurrence formula
-    that makes the GRU more expressive and easier to optimize.
-    """
-    def __init__(self, config):
-        super().__init__()
-        # input, forget, output, gate
-        self.xh_to_z = nn.Linear(config.n_embd + config.n_embd2, config.n_embd2)
-        self.xh_to_r = nn.Linear(config.n_embd + config.n_embd2, config.n_embd2)
-        self.xh_to_hbar = nn.Linear(config.n_embd + config.n_embd2, config.n_embd2)
-
-    def forward(self, xt, hprev):
-        # first use the reset gate to wipe some channels of the hidden state to zero
-        xh = torch.cat([xt, hprev], dim=1)
-        r = F.sigmoid(self.xh_to_r(xh))
-        hprev_reset = r * hprev
-        # calculate the candidate new hidden state hbar
-        xhr = torch.cat([xt, hprev_reset], dim=1)
-        hbar = F.tanh(self.xh_to_hbar(xhr))
-        # calculate the switch gate that determines if each channel should be updated at all
-        z = F.sigmoid(self.xh_to_z(xh))
-        # blend the previous hidden state and the new candidate hidden state
-        ht = (1 - z) * hprev + z * hbar
-        return ht
-
-class RNN(nn.Module):
-
-    def __init__(self, config, cell_type):
-        super().__init__()
-        self.block_size = config.block_size
-        self.vocab_size = config.vocab_size
-        self.start = nn.Parameter(torch.zeros(1, config.n_embd2)) # the starting hidden state
-        self.wte = nn.Embedding(config.vocab_size, config.n_embd) # token embeddings table
-        if cell_type == 'rnn':
-            self.cell = RNNCell(config)
-        elif cell_type == 'gru':
-            self.cell = GRUCell(config)
-        self.lm_head = nn.Linear(config.n_embd2, self.vocab_size)
-
-    def get_block_size(self):
-        return self.block_size
-
-    def forward(self, idx, targets=None):
-        device = idx.device
-        b, t = idx.size()
-
-        # embed all the integers up front and all at once for efficiency
-        emb = self.wte(idx) # (b, t, n_embd)
-
-        # sequentially iterate over the inputs and update the RNN state each tick
-        hprev = self.start.expand((b, -1)) # expand out the batch dimension
-        hiddens = []
-        for i in range(t):
-            xt = emb[:, i, :] # (b, n_embd)
-            ht = self.cell(xt, hprev) # (b, n_embd2)
-            hprev = ht
-            hiddens.append(ht)
-
-        # decode the outputs
-        hidden = torch.stack(hiddens, 1) # (b, t, n_embd2)
-        logits = self.lm_head(hidden)
-
-        # if we are given some desired targets also calculate the loss
-        loss = None
-        if targets is not None:
-            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
-
-        return logits, loss
-
-# -----------------------------------------------------------------------------
-# MLP language model
-
-class MLP(nn.Module):
-    """
-    takes the previous block_size tokens, encodes them with a lookup table,
-    concatenates the vectors and predicts the next token with an MLP.
-
-    Reference:
-    Bengio et al. 2003 https://www.jmlr.org/papers/volume3/bengio03a/bengio03a.pdf
-    """
-
-    def __init__(self, config):
-        super().__init__()
-        self.block_size = config.block_size
-        self.vocab_size = config.vocab_size
-        self.wte = nn.Embedding(config.vocab_size + 1, config.n_embd) # token embeddings table
-        # +1 in the line above for a special <BLANK> token that gets inserted if encoding a token
-        # before the beginning of the input sequence
-        self.mlp = nn.Sequential(
-            nn.Linear(self.block_size * config.n_embd, config.n_embd2),
-            nn.Tanh(),
-            nn.Linear(config.n_embd2, self.vocab_size)
-        )
-
-    def get_block_size(self):
-        return self.block_size
-
-    def forward(self, idx, targets=None):
-
-        # gather the word embeddings of the previous 3 words
-        embs = []
-        for k in range(self.block_size):
-            tok_emb = self.wte(idx) # token embeddings of shape (b, t, n_embd)
-            idx = torch.roll(idx, 1, 1)
-            idx[:, 0] = self.vocab_size # special <BLANK> token
-            embs.append(tok_emb)
-
-        # concat all of the embeddings together and pass through an MLP
-        x = torch.cat(embs, -1) # (b, t, n_embd * block_size)
-        logits = self.mlp(x)
-
-        # if we are given some desired targets also calculate the loss
-        loss = None
-        if targets is not None:
-            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
-
-        return logits, loss
-
-# -----------------------------------------------------------------------------
-# Bigram language model
-
-class Bigram(nn.Module):
-    """
-    Bigram Language Model 'neural net', simply a lookup table of logits for the
-    next character given a previous character.
-    """
-
-    def __init__(self, config):
-        super().__init__()
-        n = config.vocab_size
-        self.logits = nn.Parameter(torch.zeros((n, n)))
-
-    def get_block_size(self):
-        return 1 # this model only needs one previous character to predict the next
-
-    def forward(self, idx, targets=None):
-
-         # 'forward pass', lol
-        logits = self.logits[idx]
-
-        # if we are given some desired targets also calculate the loss
-        loss = None
-        if targets is not None:
-            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
-
-        return logits, loss
-
-# -----------------------------------------------------------------------------
 # helper functions for evaluating and sampling from the model
 
 @torch.no_grad()
@@ -553,79 +286,78 @@ def logprobs(dataset):
 # -----------------------------------------------------------------------------
 # helper functions for creating the training and test Datasets
 
+# class CharDataset(Dataset):
 
-class CharDataset(Dataset):
+#     def __init__(self, words, chars, max_word_length):
+#         self.words = words
+#         self.chars = chars
+#         self.max_word_length = max_word_length
+#         self.stoi = {ch:i+1 for i,ch in enumerate(self.chars)} # bijection 'V13' <-> 13
+#         self.itos = {i:s for s,i in self.stoi.items()} # inverse mapping: 13 -> 'V13'
 
-    def __init__(self, words, chars, max_word_length):
-        self.words = words
-        self.chars = chars
-        self.max_word_length = max_word_length
-        self.stoi = {ch:i+1 for i,ch in enumerate(self.chars)} # bijection 'V13' <-> 13
-        self.itos = {i:s for s,i in self.stoi.items()} # inverse mapping: 13 -> 'V13'
+#     def __len__(self):
+#         return len(self.words)
 
-    def __len__(self):
-        return len(self.words)
+#     def contains(self, word):
+#         return word in self.words
 
-    def contains(self, word):
-        return word in self.words
+#     def get_vocab_size(self):
+#         return len(self.chars) + 1 # all the possible characters and special 0 token
 
-    def get_vocab_size(self):
-        return len(self.chars) + 1 # all the possible characters and special 0 token
+#     def get_output_length(self):
+#         return self.max_word_length + 1 # <START> token followed by words
 
-    def get_output_length(self):
-        return self.max_word_length + 1 # <START> token followed by words
+#     def encode(self, word):
+#         ix = torch.tensor([self.stoi[w] for w in word], dtype=torch.long)
+#         return ix
 
-    def encode(self, word):
-        ix = torch.tensor([self.stoi[w] for w in word], dtype=torch.long)
-        return ix
+#     def decode(self, ix):
+#         word = ','.join(self.itos[i] for i in ix)
+#         return word
 
-    def decode(self, ix):
-        word = ','.join(self.itos[i] for i in ix)
-        return word
+#     def __getitem__(self, idx):
+#         word = self.words[idx]
+#         ix = self.encode(word)
+#         x = torch.zeros(self.max_word_length + 1, dtype=torch.long)
+#         y = torch.zeros(self.max_word_length + 1, dtype=torch.long)
+#         x[1:1+len(ix)] = ix
+#         y[:len(ix)] = ix
+#         y[len(ix)+1:] = -1 # index -1 will mask the loss at the inactive locations
+#         return x, y
 
-    def __getitem__(self, idx):
-        word = self.words[idx]
-        ix = self.encode(word)
-        x = torch.zeros(self.max_word_length + 1, dtype=torch.long)
-        y = torch.zeros(self.max_word_length + 1, dtype=torch.long)
-        x[1:1+len(ix)] = ix
-        y[:len(ix)] = ix
-        y[len(ix)+1:] = -1 # index -1 will mask the loss at the inactive locations
-        return x, y
+# def create_datasets(input_file):
 
-def create_datasets(input_file):
+#     # preprocessing of the input text file
+#     with open(input_file, 'r') as f:
+#         data = f.read()
+#     words = data.splitlines()
+#     words = [w.strip() for w in words] # get rid of any leading or trailing white space
+#     words = [w for w in words if w] # get rid of any empty strings
+#     words = [w.split(",") for w in words]
 
-    # preprocessing of the input text file
-    with open(input_file, 'r') as f:
-        data = f.read()
-    words = data.splitlines()
-    words = [w.strip() for w in words] # get rid of any leading or trailing white space
-    words = [w for w in words if w] # get rid of any empty strings
-    words = [w.split(",") for w in words]
+#     # maybe a tad hacky: we sort our dataset so that it is ordered V1, V2, .... V10, V11 ....
+#     chars = sorted(list(set([i for word in words for i in word])), key=lambda x: int(x[1:]))
 
-    # maybe a tad hacky: we sort our dataset so that it is ordered V1, V2, .... V10, V11 ....
-    chars = sorted(list(set([i for word in words for i in word])), key=lambda x: int(x[1:]))
+#     max_word_length = max(len(w) for w in words)
+#     print(f"number of examples in the dataset: {len(words)}")
+#     print(f"max word length: {max_word_length}")
+#     print(f"number of unique characters in the vocabulary: {len(chars)}")
+#     print("vocabulary:")
+#     print(chars)
 
-    max_word_length = max(len(w) for w in words)
-    print(f"number of examples in the dataset: {len(words)}")
-    print(f"max word length: {max_word_length}")
-    print(f"number of unique characters in the vocabulary: {len(chars)}")
-    print("vocabulary:")
-    print(chars)
+#     # partition the input data into a training and the test set
+#     test_set_size = min(1000, int(len(words) * 0.1)) # 10% of the training set, or up to 1000 examples
 
-    # partition the input data into a training and the test set
-    test_set_size = min(1000, int(len(words) * 0.1)) # 10% of the training set, or up to 1000 examples
-
-    rp = torch.randperm(len(words)).tolist()
-    train_words = [words[i] for i in rp[:-test_set_size]]
-    test_words = [words[i] for i in rp[-test_set_size:]]
-    print(f"split up the dataset into {len(train_words)} training examples and {len(test_words)} test examples")
+#     rp = torch.randperm(len(words)).tolist()
+#     train_words = [words[i] for i in rp[:-test_set_size]]
+#     test_words = [words[i] for i in rp[-test_set_size:]]
+#     print(f"split up the dataset into {len(train_words)} training examples and {len(test_words)} test examples")
     
-    # wrap in dataset objects
-    train_dataset = CharDataset(train_words, chars, max_word_length)
-    test_dataset = CharDataset(test_words, chars, max_word_length)
+#     # wrap in dataset objects
+#     train_dataset = CharDataset(train_words, chars, max_word_length)
+#     test_dataset = CharDataset(test_words, chars, max_word_length)
 
-    return train_dataset, test_dataset
+#     return train_dataset, test_dataset
     
 def create_eval_dataset(input_file):
     """
