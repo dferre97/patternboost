@@ -1,3 +1,7 @@
+# About this repo
+
+Working and improved re-implementation of the PatternBoost method (https://github.com/zawagner22/transformers_math_experiments), work in progress.
+
 # How to run the container
 
 1. Start Docker Desktop
